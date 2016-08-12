@@ -31,15 +31,16 @@ hi link chromaticaEnumConstantDecl EnumConstant
 hi link chromaticaFunctionDecl Function
 hi link chromaticaVarDecl Variable
 hi link chromaticaParmDecl Variable
-hi link chromaticaObjCInterfaceDecl Normal
-hi link chromaticaObjCCategoryDecl Normal
-hi link chromaticaObjCProtocolDecl Normal
-hi link chromaticaObjCPropertyDecl Normal
-hi link chromaticaObjCIvarDecl Normal
-hi link chromaticaObjCInstanceMethodDecl Normal
-hi link chromaticaObjCClassMethodDecl Normal
-hi link chromaticaObjCImplementationDecl Normal
-hi link chromaticaObjCCategoryImplDecl Normal
+" objc settings 
+hi link chromaticaObjCInterfaceDecl objcClass
+hi link chromaticaObjCCategoryDecl objcClass
+hi link chromaticaObjCProtocolDecl objcClass
+hi link chromaticaObjCPropertyDecl objcPropertyAttribute
+hi link chromaticaObjCIvarDecl objcPropertyAttribute
+hi link chromaticaObjCInstanceMethodDecl objcMethodCall
+hi link chromaticaObjCClassMethodDecl objcMethodCall
+hi link chromaticaObjCImplementationDecl objcClass
+hi link chromaticaObjCCategoryImplDecl objcClass
 hi link chromaticaTypedefDecl Type
 hi link chromaticaCXXMethod Function
 hi link chromaticaNamespace Namespace
@@ -57,12 +58,13 @@ hi link chromaticaNamespaceAlias Namespace
 hi link chromaticaUsingDirective Type
 hi link chromaticaUsingDeclaration Type
 hi link chromaticaTypeAliasDecl Type
-hi link chromaticaObjCSynthesizeDecl Normal
-hi link chromaticaObjCDynamicDecl Normal
+" objc settings continue
+hi link chromaticaObjCSynthesizeDecl objcPropertyAttribute
+hi link chromaticaObjCDynamicDecl objcPropertyAttribute
 hi link chromaticaCXXAccessSpecifier Label
-hi link chromaticaObjCSuperClassRef Normal
-hi link chromaticaObjCProtocolRef Normal
-hi link chromaticaObjCClassRef Normal
+hi link chromaticaObjCSuperClassRef objcClass
+hi link chromaticaObjCProtocolRef objcClass
+hi link chromaticaObjCClassRef objcClass
 hi link chromaticaTypeRef Type
 hi link chromaticaCXXBaseSpecifier Type
 hi link chromaticaTemplateRef Type
@@ -102,8 +104,9 @@ hi link chromaticaCStyleCast chromaticaCast
 hi link chromaticaExceptionStatement chromaticaException
 hi link chromaticaExceptionAttr chromaticaException
 hi link chromaticaTypeAliasStatement Statement
-hi link chromaticaFile Namespace
-hi link chromaticaIncludedHeaderFile Namespace
+" use the string color as the header file (#import "xxx")color
+hi link chromaticaFile String
+hi link chromaticaIncludedHeaderFile String
 hi link chromaticaFinalAttr Statement
 hi link chromaticaOverrideAttr Statement
 hi link chromaitcaConstAttr Typedef
