@@ -35,8 +35,11 @@ hi link chromaticaParmDecl Variable
 hi link chromaticaObjCInterfaceDecl objcClass
 hi link chromaticaObjCCategoryDecl objcClass
 hi link chromaticaObjCProtocolDecl objcClass
-hi link chromaticaObjCPropertyDecl objcPropertyAttribute
-hi link chromaticaObjCIvarDecl objcPropertyAttribute
+
+"@property () xxx
+hi link chromaticaObjCPropertyDecl Variable 
+hi link chromaticaObjCIvarDecl Variable
+
 hi link chromaticaObjCInstanceMethodDecl objcMethodCall
 hi link chromaticaObjCClassMethodDecl objcMethodCall
 hi link chromaticaObjCImplementationDecl objcClass
