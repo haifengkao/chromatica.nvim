@@ -5,7 +5,7 @@ from chromatica.util import load_external_module
 load_external_module(__file__, "")
 from clang import cindex
 
-log = logger.logging.getLogger("chromatica")
+log = logger.logging.getLogger("chromatica.syntax")
 
 HIGHLIGHT_FEATURE_LEVEL=0
 
@@ -189,6 +189,7 @@ SYNTAX_GROUP = {
     cindex.CursorKind.COMPOUND_ASSIGNMENT_OPERATOR: None,
     cindex.CursorKind.CONDITIONAL_OPERATOR: None,
     cindex.CursorKind.CSTYLE_CAST_EXPR: "chromaticaCStyleCast",
+    cindex.CursorKind.COMPOUND_LITERAL_EXPR: None,
     cindex.CursorKind.INIT_LIST_EXPR: None,
     cindex.CursorKind.ADDR_LABEL_EXPR: None,
     cindex.CursorKind.StmtExpr: None,
@@ -319,6 +320,25 @@ def _get_default_syn(tu, token, cursor):
     else:
         return None
 
+def _get_identifier_syn(tu, token, cursor):
+    group = _get_default_syn(tu, token, cursor)
+
+    _group = SYNTAX_GROUP.get(cursor.kind)
+    if _group:
+        if cursor.kind == cindex.CursorKind.DECL_REF_EXPR:
+            _group = _group.get(cursor.type.kind)
+            if _group:
+                group = _group
+        elif cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR:
+            _group = _group.get(cursor.type.kind)
+            if _group:
+                group = _group
+            else:
+                group = "chromaticaMemberRefExprVar"
+        else:
+            group = _group
+    return group
+
 def _get_keyword_decl_syn(tu, token, cursor):
     group = KEYWORDS.get(token.spelling)
     if group:
@@ -332,10 +352,20 @@ def _get_keyword_syn(tu, token, cursor):
     keywords"""
     if cursor.kind.is_declaration(): # hack for function return type and others
         return _get_keyword_decl_syn(tu, token, cursor)
+    elif cursor.kind == cindex.CursorKind.COMPOUND_LITERAL_EXPR:
+        return _get_keyword_decl_syn(tu, token, cursor)
     elif cursor.kind == cindex.CursorKind.INVALID_FILE and token.spelling == "typedef":
         return "chromaticaTypeRef"
     else:
-        return SYNTAX_GROUP.get(cursor.kind)
+        _group = SYNTAX_GROUP.get(cursor.kind)
+        if _group:
+            if cursor.kind == cindex.CursorKind.DECL_REF_EXPR:
+                return "Type"
+            elif cursor.kind == cindex.CursorKind.CALL_EXPR \
+                    and cursor.type == cindex.TypeKind.UNEXPOSED:
+                return "Type"
+            else:
+                return _get_identifier_syn(tu, token, cursor)
 
 def _get_punctuation_syntax(tu, token, cursor):
     """Handles tokens for punctuation"""
@@ -352,39 +382,22 @@ def _get_syntax_group(tu, token):
             return _get_punctuation_syntax(tu, token, cursor)
         elif token.kind.value == 1: # Keyword
             return _get_keyword_syn(tu, token, cursor)
-        elif token.kind.value == 4: # Comment
-            return "Comment"
+        elif token.kind.value == 4: # Comment: let vim handle it
+            return None
 
     if token.kind.value == 2: # Identifier
-        group = _get_default_syn(tu, token, cursor)
-
-        _group = SYNTAX_GROUP.get(cursor.kind)
-        if _group:
-            if cursor.kind == cindex.CursorKind.DECL_REF_EXPR:
-                _group = _group.get(cursor.type.kind)
-                if _group:
-                    group = _group
-            elif cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR:
-                _group = _group.get(cursor.type.kind)
-                if _group:
-                    group = _group
-                else:
-                    group = "chromaticaMemberRefExprVar"
-            else:
-                group = _group
-        return group
+        return _get_identifier_syn(tu, token, cursor)
 
     elif token.kind.value == 3: # Literal
         literal_type = LITERAL_GROUP.get(cursor.kind)
-        if literal_type:
-            return literal_type
-        else:
-            return "%s" % literal_type
+        if literal_type: return literal_type
+        else: return None
     else:
         return None
 
 
 def get_highlight(tu, filename, lbegin, lend):
+    log.debug("get_highlight")
     file = tu.get_file(filename)
 
     if not file:
@@ -411,7 +424,7 @@ def get_highlight(tu, filename, lbegin, lend):
 
     return syntax
 
-def get_highlight2(tu, filename, lbegin, lend):
+def dump_ast_info(tu, filename, lbegin, lend):
     NOCOLOR = 0
     BLACK   = 30
     RED     = 31

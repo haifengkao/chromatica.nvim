@@ -66,8 +66,6 @@ function! chromatica#init#_initialize() abort
     let s:is_enabled = g:chromatica#enable_at_startup
     if s:is_enabled
         call chromatica#init#_enable()
-    else
-        call chromatica#init#_disable()
     endif
 endfunction
 
@@ -83,7 +81,7 @@ function! chromatica#init#_enable() abort
         runtime! syntax/chromatica.vim
     endif
 
-    if get(g:, 'chromatica#enable_debug', 0) "{{{
+    if get(g:, 'chromatica#enable_log', 0) "{{{
         call chromatica#enable_logging('DEBUG', 'chromatica.log')
     endif "}}}
 
@@ -101,15 +99,15 @@ function! chromatica#init#_variables() abort
     let g:chromatica#_context = {}
     let g:chromatica#_rank = {}
 
-    " User vairables
+    " User variables
     call chromatica#util#set_default(
                 \ 'g:chromatica#libclang_path', '/usr/lib/libclang.so')
     call chromatica#util#set_default(
                 \ 'g:chromatica#enable_at_startup', 0)
     call chromatica#util#set_default(
-                \ 'g:chromatica#enable_debug', 0)
+                \ 'g:chromatica#enable_log', 0)
     call chromatica#util#set_default(
-                \ 'g:chromatica#syntax_src_id', -2)
+                \ 'g:chromatica#syntax_src_id', 100)
     call chromatica#util#set_default(
                 \ 'g:chromatica#global_args', [])
     call chromatica#util#set_default(
@@ -120,6 +118,8 @@ function! chromatica#init#_variables() abort
                 \ 'g:chromatica#use_pch', 1)
     call chromatica#util#set_default(
                 \ 'g:chromatica#highlight_feature_level', 0)
+    call chromatica#util#set_default(
+                \ 'g:chromatica#dotclangfile_search_path', '')
 endfunction
 
 function! chromatica#init#_context() abort

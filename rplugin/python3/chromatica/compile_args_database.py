@@ -56,57 +56,73 @@ class CompileArgsDatabase(object):
                 return
             cdb_file_path = os.path.dirname(cdb_file_path)
 
+    def __parse_cdb_key(self, value):
+        cdb_rel_path = value.strip("\"")
+        cdb_path = os.path.join(os.path.dirname(self.__clang_file), cdb_rel_path)
+        if cdb_path and os.path.isdir(cdb_path):
+            self.__cdb_path = cdb_path
+
     def __parse_compile_args(self):
         if self.__clang_file == None:
             return
         # read .clang file
         fp = open(self.__clang_file)
-        flags = fp.read()
+        lines = fp.readlines()
         fp.close()
-        m = re.match(r"^flags\s*=\s*", flags)
-        if m != None:
-            self.compile_args += flags[m.end():].split()
 
-        m = re.match(r"^compilation_database\s*=\s*", flags)
-        if m != None:
-            cdb_rel_path = flags[m.end():].strip("\"")
-            cdb_path = os.path.join(os.path.dirname(self.__clang_file), cdb_rel_path)
-            if cdb_path and os.path.isdir(cdb_path):
-                self.__cdb_path = cdb_path
+        funcs = {"flags" : lambda s, value: s.compile_args.extend(value.split()),
+                 "compilation_database" : self.__parse_cdb_key, }
+
+        for line in lines:
+            pos = line.find("=")
+            key = line[:pos]
+            try:
+                funcs[key](self, line[pos+1:].strip())
+            except:
+                log.error("Invalid configuration key: ", key)
 
     def __try_init_cdb(self):
         if self.__cdb_path != None:
             self.cdb = cindex.CompilationDatabase.fromDirectory(self.__cdb_path)
 
-    def get_args_filename(self, filename):
-        ret = None
-        if self.cdb != None:
-            ret = self.cdb.getCompileCommands(filename)
-
+    def __get_cdb_args(self, filename):
+        res = []
+        ret = self.cdb.getCompileCommands(filename)
+        _basename = os.path.basename(filename)
+        log.info("Read cdb for: %s" % filename)
         if ret:
-            res = []
             for cmds in ret:
                 cwd = cmds.directory
-                skip = 1
+                skip = 0
                 for arg in cmds.arguments:
-                    if skip or arg == '-c':
+                    if skip and arg[0] != "-":
                         skip = 0
                         continue
-                    elif os.path.realpath(os.path.join(cwd, arg)) == cmds.filename:
-                        skip = 0
-                        continue
-                    elif arg == '-o':
+                    if arg == "-o" or arg == "-c":
                         skip = 1
                         continue
-                    elif arg.startswith('-I'):
+
+                    if arg.startswith('-I'):
                         include_path = arg[2:]
                         if not os.path.isabs(include_path):
                             include_path = os.path.normpath(
                                 os.path.join(cwd, include_path))
                         res.append('-I' + include_path)
-                        continue
-                    res.append(arg)
-            return self.compile_args + res
+                    if _basename in arg:
+                        continue;
+                    else:
+                        res.append(arg)
+        else:
+            print("Cannot find compile flags for %s in compilation database" % filename)
+        return res
+
+    def get_args_filename(self, filename):
+        ret = None
+        if self.cdb != None:
+            ret = self.__get_cdb_args(filename)
+
+        if ret:
+            return self.compile_args + ret
         else:
             return self.compile_args
 
